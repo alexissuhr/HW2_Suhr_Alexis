@@ -1,0 +1,206 @@
+---
+title: "STAA 566 - Homework 2 - Dynamic Figure"
+author: "Alexis Suhr"
+date: "17 February 2022"
+output: html_document
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+ encoding=encoding,
+ output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
+---
+
+### Summary for Assignment: 
+
+data source
+what you want to convey in the figure
+what functionality and formatting you put into the figure and why.
+
+1. Data Source:  
+I found a GitHub repository, "tidytuesday" - https://github.com/rfordatascience/tidytuesday/tree/master/data, which has a ton of datasets uploaded every Tuesday since 2018. I randomly found a dataset titled 'The Office Data' and thought that might be fun to visualize. It has IMDB Rating and Number of Votes that went into each rating for each episode of the show "The Office" (my favorite show!).  
+
+2. What you want to convey in the figure:  
+I wanted to allow the user to see IMDB Ratings for every episode of The Office. The user can toggle between seasons, and change axes based on rating. When a user hovers over a point, it lists the Title, Season, and Rating.  
+
+3. What functionality and formatting you put into the figure and why:  
+I chose a basic plot to convey this information. I would've liked to go further and give the user the ability to toggle between multiple x variables (Title and Number of Votes) to give an idea of how the number of votes increased as the time went on. However, I was unable to figure out how to do this in time. I was able to add Air Date and Number of Votes for each rating to the tooltip for an addition of functionality.  
+
+
+### Libraries, Packages:
+
+```{r}
+###### Install Packages ###### 
+
+# This command can check for all libraries/packages that have been loaded or already exist, if needed.
+# May use this in other projects, just going to comment out for now so I have it.
+#(library()$results[,1])
+
+# **ONLY RUN IF CODE BELOW IF NEEDED - TAKES A WHILE**
+# Can copy and paste below into the console if needed
+# to avoid including in the knitting
+
+# install.packages(c('ggplot2', 'tidyverse', 'plotly', 'readr'))
+
+###### Read in libraries to be used ###### 
+libs <- c('ggplot2',
+          'tidyverse',
+          'plotly',
+          'readr')
+for(l in libs){
+  suppressPackageStartupMessages(library(l,
+                                         quietly = TRUE,
+                                         character.only = TRUE))
+}
+
+```
+
+### Reading in and Cleaning/Modifying Data:  
+```{r}
+###### Reading in The Office Episode data and modifying (in one step! :) ###### 
+
+# Changing season,episode to factor instead of numeric
+# ie adding as a selectable variable
+# Adding month, year variables separate from 'air_date' 
+# Changing naming conventions so I can be consistent across coding languages
+
+OfficeData <- read.csv("/cloud/project/DATA_TheOffice_RatingsByEpisodeAndDate.txt") %>%
+  mutate(Season = as.factor(season),
+         EpisodeNumber = as.factor(episode),
+         CombinedSeasonEpisodeNumber = as.factor(paste(Season,
+                                                       EpisodeNumber,
+                                                       sep = '-')),
+         Title = title,
+         FirstLetterOfTitle = substr(Title, 1, 1),
+         IMDBRating = as.numeric(imdb_rating),
+         TotalVotesForRating = as.numeric(total_votes),
+         AirDate = unlist(strsplit(toString(air_date), split = ', ')),
+         AirDateYear = as.factor(substr(AirDate, 
+                                        1, 4)),
+         AirDateMonth = as.factor(substr(AirDate, 
+                                         6, 7))
+  ) %>%
+  select(Title, 
+         FirstLetterOfTitle,
+         Season, 
+         EpisodeNumber, 
+         CombinedSeasonEpisodeNumber,
+         Title,
+         IMDBRating,
+         TotalVotesForRating,
+         AirDateYear,
+         AirDateMonth,
+         AirDate
+  )
+```
+
+### (Brief) Exploratory Data Analysis (Determine Dynamic Figure Characteristics)    
+
+```{r}
+###### COMMENTED OUT - Playing with plots for Dynamic Figure Selection ###### 
+
+# summary(OfficeData)
+# 
+###### average rating by season ###### 
+# SeasonNumber_AvgsAndSDs <- OfficeData %>%
+#   group_by(Season) %>%
+#   summarise(RatingMean = round(mean(IMDBRating), 4),
+#             RatingSD = round(sd(IMDBRating), 4))
+# SeasonNumber_AvgsAndSDs
+# 
+###### average rating by month aired ###### 
+# MonthAired_AndSDs <- OfficeData %>%
+#   group_by(AirDateMonth) %>%
+#   summarise(RatingMean = round(mean(IMDBRating), 4),
+#             RatingSD = round(sd(IMDBRating), 4))
+# 
+# MonthAired_AndSDs
+# 
+# 
+###### average rating by year aired ###### 
+# 
+# YearAired_AvgsAndSDs <- OfficeData %>%
+#   group_by(AirDateYear) %>%
+#   summarise(RatingMean = round(mean(IMDBRating), 4),
+#             RatingSD = round(sd(IMDBRating), 4))
+# 
+# YearAired_AvgsAndSDs
+# 
+# 
+###### Plot 1: Histogram of IMDB Ratings ###### 
+#
+# ggplot(data = OfficeData,
+#        aes(x = IMDBRating,
+#            fill = as.factor(round(IMDBRating))))+
+#   geom_bar()+
+#   labs(title = 'Histogram of IMDB Ratings',
+#        x = 'IMDB Rating',
+#        y = 'Count',
+#        fill = 'Rounded IMDB Rating')
+# 
+###### Plot 2: IMDB Ratings by Season ###### 
+#
+# ggplot(data = OfficeData,
+#        aes(x = Season,
+#            y = IMDBRating,
+#            color = Season))+
+#   geom_boxplot()+
+#   labs(title = 'IMDB Ratings by Season',
+#        y = 'IMDB Rating')+
+#   theme(legend.position="none")
+# 
+###### Plot 3: IMDB vs. Number of Votes ###### 
+# 
+# ggplot(data = OfficeData,
+#        aes(x = TotalVotesForRating,
+#            y = IMDBRating,
+#            color = Season))+
+#   geom_point()+
+#   labs(title = 'IMDB Rating by Number of Votes',
+#        x = 'Number of Votes',
+#        y = 'IMDB Rating',
+#        color = 'Season Number')
+# 
+###### Plot 3: IMDB Ratings by Episode (Alphabetical) ###### 
+# 
+# ggplot(data = OfficeData,
+#        aes(x = Title,
+#            y = IMDBRating,
+#            color = Season,
+#            group = FirstLetterOfTitle))+
+#   geom_point(aes(group = FirstLetterOfTitle))+
+#   labs(title = 'IMDB Rating by Episode (Alphabetical, NOT Chronological)',
+#        x = 'Title (A-Z)',
+#        y = 'IMDB Rating',
+#        color = 'Season Number')+
+#   theme(axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank())
+
+```
+#### Dynamic Figure  
+
+```{r}
+
+###### Dynamic Figure: IMDB Rating by Episode (Alphabetical), colored by Season ###### 
+ggplot_DynamicFigure <- ggplot(data = OfficeData,
+                               aes(x = Title,
+                                   y = IMDBRating,
+                                   color = Season,
+                                   label = AirDate,
+                                   label = TotalVotesForRating,
+                               ))+
+  geom_point()+
+  labs(title = 'IMDB Rating by Episode (Alphabetical, NOT Chronological)',
+       x = 'Title (A-Z)',
+       x = 'Episode (Alphabetical)',
+       y = 'IMDB Rating',
+       color = 'Season Number')+
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+
+
+plotly_DynamicFigure <- ggplotly(ggplot_DynamicFigure)
+
+plotly_DynamicFigure
+
+```
+
