@@ -2,7 +2,7 @@
 STAA 566 Assignment 2 - Dynamic Figure
 
 Make a dynamic figure. Describe the following:
-
+ 
 data source
 what you want to convey in the figure
 what functionality and formatting you put into the figure and why.
